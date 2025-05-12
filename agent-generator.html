@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор изображений | Kandinsky</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #f0f4f8;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #status {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .input-container {
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .image-container {
+      animation: slideUp 1s ease-out;
+    }
+
+    .image-container img {
+      transition: transform 0.5s ease;
+    }
+
+    .image-container img:hover {
+      transform: scale(1.05);
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      0% {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col justify-center items-center p-4">
+
+  <!-- Контейнер -->
+  <div class="max-w-3xl w-full bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-semibold text-center text-gray-800 mb-4">Генератор изображений на Kandinsky</h1>
+
+    <!-- Поле ввода текста -->
+    <div class="input-container mb-4">
+      <input type="text" id="prompt" placeholder="Введите описание..." class="w-full p-4 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+
+    <!-- Кнопка генерации -->
+    <button onclick="generate()" class="w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:scale-105">
+      Сгенерировать
+    </button>
+
+    <!-- Статус -->
+    <div id="status" class="mt-4 text-center text-gray-600"></div>
+
+    <!-- Контейнер с изображением -->
+    <div class="image-container mt-6 flex justify-center">
+      <img id="result" class="hidden max-w-full rounded-lg shadow-lg" />
+    </div>
+
+  </div>
+
+  <script>
+    const API_KEY = "FA5D8A39360B289EA375C5A5719490C8"; // Подставь свой API-ключ сюда
+    const API_URL = "https://api.fusionbrain.ai/web/generate/v2/text2image";
+
+    async function generate() {
+      const prompt = document.getElementById("prompt").value;
+      const statusDiv = document.getElementById("status");
+      const resultImage = document.getElementById("result");
+
+      // Показать статус генерации
+      statusDiv.textContent = "Генерация изображения... Подождите, пожалуйста...";
+
+      // Скрыть старое изображение
+      resultImage.classList.add("hidden");
+      resultImage.src = "";
+
+      // Отправка запроса на API
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "X-Key": API_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model_id: 1,
+          num_images: 1,
+          width: 1024,
+          height: 1024,
+          text: prompt
+        })
+      });
+
+      if (!response.ok) {
+        statusDiv.textContent = "Ошибка при генерации.";
+        return;
+      }
+
+      const data = await response.json();
+      const uuid = data.uuid;
+
+      // Задержка перед отображением изображения
+      setTimeout(() => {
+        const imgUrl = `https://fusionbrain.ai/api/v1/images/${uuid}`;
+        resultImage.src = imgUrl;
+        resultImage.classList.remove("hidden");
+
+        // Обновить статус
+        statusDiv.textContent = "Готово! Картинка сгенерирована.";
+      }, 12000); // Обычно ~10–12 секунд на обработку
+    }
+  </script>
+
+</body>
+
+</html>
